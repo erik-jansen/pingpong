@@ -1,0 +1,171 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="game">
+        <!--<div class="racket"></div>-->
+        <div class="ball"></div>
+    </div>
+    <!--<button onclick="startGame()">Start!</button>
+    <button onclick="pauzeGame()">Pauze</button>-->
+    <br /><br />
+    <div class="players">
+        <ul class="playerList"></ul>
+    </div>
+    <div class="register">
+        <form class="frmRegister">
+            <input type="text" name="nickname" value="Erik" />
+            <button class="btnRegister">Register</button>
+        </form>
+    </div>
+    <div class="countdown"></div>
+    <div class="finished"></div>
+
+    <script src="socket.io/socket.io.js"></script>
+    <script>
+        var socket = io();
+
+        let rackets = [];
+        const game = document.querySelector('.game');
+        const ball = document.querySelector('.ball');
+        const gameCoords = game.getBoundingClientRect();
+        const frmRegister = document.querySelector('.frmRegister');
+        const registerPane = document.querySelector('.register');
+        const countdownPane = document.querySelector('.countdown');
+        const finishedPane = document.querySelector('.finished');
+        const playerList = document.querySelector('.playerList');
+
+        let countdownInterval;
+        let countdownnumber = 3;
+        let player = {};
+        let started = false;
+        let init = {};
+
+        socket.on('register', function (msg) {
+            init = JSON.parse(msg);
+            player = init.player;
+
+            registerPane.style.display = 'none';
+            game.style.transform = `rotate(${init.deg}deg)`;
+        });
+
+        socket.on('start', function (msg) {
+            const players = JSON.parse(msg);
+            players.map(player => {
+                const li = document.createElement('li');
+                li.textContent = `Player ${player.id + 1}. ${player.name}`;
+                playerList.appendChild(li);
+            });
+            console.log('start');
+
+            countdownPane.style.display = 'inline';
+
+            countdownInterval = setInterval(() => {
+                countdownPane.textContent = countdownnumber;
+                countdownnumber--;
+                if (countdownnumber === -1) {
+                    clearInterval(countdownInterval);
+                    countdownPane.style.display = 'none';
+                }
+
+            }, 1000);
+
+            startGame();
+
+        })
+
+        socket.on('racketCoords', function (msg) {
+            const racketCoords = JSON.parse(msg);
+            rackets[racketCoords.playerId].style.transform = `translate(${racketCoords.left}px, ${racketCoords.top}px)`;
+        });
+
+        socket.on('ball', function (msg) {
+            const ballCoords = JSON.parse(msg);
+            //console.log(ballCoords)
+            ball.style.transform = `translate(${ballCoords.left}px, ${ballCoords.top}px)`;
+        });
+
+        socket.on('finish', function (msg) {
+            const loser = msg;
+            console.log(loser);
+            if (player.id === loser) {
+                game.style.backgroundColor = 'red';
+            }
+            else {
+                game.style.backgroundColor = 'green';
+            }
+            socket.close();
+        });
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function register(e) {
+            e.preventDefault();
+            socket.emit('register', this.nickname.value);
+            document.querySelector('.btnRegister').disabled = true;
+        }
+
+        function startGame() {
+            const racket0 = document.createElement('div');
+            racket0.className = 'racket';
+            racket0.id = 'racket0'
+
+            const racket1 = document.createElement('div');
+            racket1.className = 'racket';
+            racket1.id = 'racket1';
+
+            game.appendChild(racket0);
+            game.appendChild(racket1);
+
+            rackets.push(document.querySelector('#racket0'));
+            rackets.push(document.querySelector('#racket1'));
+
+            started = true;
+            
+        }
+
+        function moveRacket(e) {
+
+            if (!started) return;
+
+            const racket = rackets[player.id];
+            let top = 0;
+            let left = 0;
+            if (init.racketLocation === 'bottom') {
+                top = gameCoords.height - racket.offsetHeight;
+                left = e.clientX - gameCoords.left - (racket.offsetWidth / 2);
+            } else {
+                top = 0;
+                left = (gameCoords.right-gameCoords.left) - (e.clientX - gameCoords.left + (racket.offsetWidth/2));
+            }
+
+            const coords = {
+                left: left,
+                right: left + 100,
+                top: top,
+                bottom: top + 10
+            };
+
+            if (coords.left < 0) coords.left = 0;
+            if (coords.left > (gameCoords.width - racket.offsetWidth)) coords.left = gameCoords.width - racket.offsetWidth;
+            racket.style.transform = `translate(${coords.left}px, ${coords.top}px)`;
+
+            const racketCoords = racket.getBoundingClientRect();
+            emitToSocket('racketCoords', { playerId: player.id, left: coords.left, right: coords.right, top: coords.top, bottom: coords.bottom});
+        }
+
+        function emitToSocket(name, coords) {
+            const coordsJSON = JSON.stringify(coords);
+            socket.emit(name, coordsJSON);
+        }
+
+        frmRegister.addEventListener('submit', register);
+        window.addEventListener('mousemove', moveRacket);
+    </script>
+</body>
+</html>

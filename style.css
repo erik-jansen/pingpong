@@ -1,0 +1,42 @@
+html {
+    font-size: 10px;
+    background: #ffc600;
+}
+
+body {
+    padding: 0;
+    margin: 0;
+}
+
+.game {
+    
+    border-left: 5px solid white;
+    border-right: 5px solid white;
+    width: 600px;
+    height: 400px;
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 auto;
+}
+
+.racket {
+    width: 100px;
+    height: 10px;
+    background-color: white;
+    display: flex;
+    border:1px solid red;
+    position:absolute;
+}
+
+.ball {
+    width:10px;
+    height:10px;
+    background-color: red;
+}
+
+.countdown {
+    display:none;
+}
+.finish {
+    display:none;
+}
