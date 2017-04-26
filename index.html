@@ -110,6 +110,10 @@
 
             registerPaneContent.innerHTML = `${finishMsg}<br/><br/><button onclick="playAgain()">Play Again</button>`;
             registerPane.style.display = 'block';
+            playerList.innerHTML = '';
+            game.removeChild(rackets[0]);
+            game.removeChild(rackets[1]);
+            rackets = [];
 
             socket.close();
         });
@@ -154,6 +158,10 @@
 
             started = true;
             
+            const racket = rackets[player.id];
+            const top = init.racketLocation === 'bottom' ? gameCoords.height - racket.offsetHeight : 0;
+
+            emitToSocket('racketCoords', { playerId: player.id, left: 0, right: 0, top: top, bottom: 0});
         }
 
         function moveRacket(e) {
@@ -182,7 +190,6 @@
             if (coords.left > (gameCoords.width - racket.offsetWidth)) coords.left = gameCoords.width - racket.offsetWidth;
             racket.style.transform = `translate(${coords.left}px, ${coords.top}px)`;
 
-            const racketCoords = racket.getBoundingClientRect();
             emitToSocket('racketCoords', { playerId: player.id, left: coords.left, right: coords.right, top: coords.top, bottom: coords.bottom});
         }
 

@@ -18,7 +18,7 @@ function clearState()
 {
     players = [];
     rackets = [];
-    oldBall = { left: 0, top: 0, direction: 160 };
+    oldBall = { left: 50, top: 50, direction: 160 };
 }
 
 io.on('connection', function (socket) {
@@ -142,11 +142,11 @@ function checkBounds() {
     // check bottom hole
     // if reached, you lose
     if (oldBall.bottom > 400) {
-        //oldBall.direction = getNewT2BDirection(oldBall.direction);
+        oldBall.direction = getNewT2BDirection(oldBall.direction);
         console.log('...PLAYER 1 LOST GAME...');
         //console.log('Changed direction T2B');
         //clearInterval(interval);
-        retval = 0;
+        // retval = 0;
     }
 
     if (oldBall.bottom > rackets[0].top
