@@ -5,23 +5,25 @@
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
+        <div class="register">
+        <span class="content">Welcome to Ping Pong. Please Register...</span>
+        <form class="frmRegister">
+            <input type="text" name="nickname" value="Erik" />
+            <button class="btnRegister">Register</button>
+        </form>
+    </div>
     <div class="game">
         <!--<div class="racket"></div>-->
         <div class="ball"></div>
     </div>
+
     <!--<button onclick="startGame()">Start!</button>
     <button onclick="pauzeGame()">Pauze</button>-->
     <br /><br />
     <div class="players">
         <ul class="playerList"></ul>
     </div>
-    <div class="register">
-        <form class="frmRegister">
-            <input type="text" name="nickname" value="Erik" />
-            <button class="btnRegister">Register</button>
-        </form>
-    </div>
-    <div class="countdown"></div>
+    
     <div class="finished"></div>
 
     <script src="socket.io/socket.io.js"></script>
@@ -34,12 +36,13 @@
         const gameCoords = game.getBoundingClientRect();
         const frmRegister = document.querySelector('.frmRegister');
         const registerPane = document.querySelector('.register');
+        const registerPaneContent = document.querySelector('.register .content');
         const countdownPane = document.querySelector('.countdown');
         const finishedPane = document.querySelector('.finished');
         const playerList = document.querySelector('.playerList');
 
         let countdownInterval;
-        let countdownnumber = 3;
+        
         let player = {};
         let started = false;
         let init = {};
@@ -48,12 +51,14 @@
             init = JSON.parse(msg);
             player = init.player;
 
-            registerPane.style.display = 'none';
+            registerPaneContent.textContent = 'Thanks for registering. We\'ll create a match and get you started';
+            frmRegister.style.display = 'none';
             game.style.transform = `rotate(${init.deg}deg)`;
         });
 
         socket.on('start', function (msg) {
             const players = JSON.parse(msg);
+
             players.map(player => {
                 const li = document.createElement('li');
                 li.textContent = `Player ${player.id + 1}. ${player.name}`;
@@ -61,14 +66,14 @@
             });
             console.log('start');
 
-            countdownPane.style.display = 'inline';
+            let countdownnumber = 3;
 
             countdownInterval = setInterval(() => {
-                countdownPane.textContent = countdownnumber;
+                registerPaneContent.innerHTML = `Great, a match has been made! You will be playing ${findOtherPlayer(players, player.id)}.<br/><br/>Your game starts in ${countdownnumber} seconds...`;
                 countdownnumber--;
                 if (countdownnumber === -1) {
                     clearInterval(countdownInterval);
-                    countdownPane.style.display = 'none';
+                    registerPane.style.display = 'none';
                 }
 
             }, 1000);
@@ -89,20 +94,42 @@
         });
 
         socket.on('finish', function (msg) {
+            started=false;
             const loser = msg;
             console.log(loser);
+
+            let finishMsg = ''
             if (player.id === loser) {
-                game.style.backgroundColor = 'red';
+                finishMsg = 'Unfortunately you have lost... Try again!'
+                registerPane.style.backgroundColor = 'red';
             }
             else {
-                game.style.backgroundColor = 'green';
+                finishMsg = 'Whoooohooo! You have won... Play again!'
+                registerPane.style.backgroundColor = 'green';
             }
+
+            registerPaneContent.innerHTML = `${finishMsg}<br/><br/><button onclick="playAgain()">Play Again</button>`;
+            registerPane.style.display = 'block';
+
             socket.close();
         });
+
+        function findOtherPlayer(players, thisPlayerId)
+        {
+            const idx = players.findIndex(player => player.id !== thisPlayerId);
+            return players[idx].name;
+        }
 
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
         }
+
+        function playAgain()
+        {
+            socket.open();
+            socket.emit('playAgain', player.name);
+        }
+
 
         function register(e) {
             e.preventDefault();

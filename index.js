@@ -22,26 +22,60 @@ function clearState()
 }
 
 io.on('connection', function (socket) {
-    socket.on('register', function (msg) {
-        const playerId = players.length;
-        init = {
-            'deg': playerId === 0 ? 0 : 180,
-            'racketLocation': playerId === 0 ? 'bottom' : 'top',
-            'player': {}
-        }
-        player = {
-            'id': playerId,
-            'name': msg,
-            'socketId': socket.id
-        }
+    socket.on('register', function (playerName) {
+        
+        registerPlayerAndStart(playerName, socket);
 
-        init.player = player;
+        
+    });
 
-        players.push(player);
-        console.log(players);
-        socket.emit('register', JSON.stringify(init));
+    socket.on('playAgain', function(playerName)
+    {
+        registerPlayerAndStart(playerName, socket);
+    });
 
-        if (players.length === 2) {
+    socket.on('racketCoords', function (msg) {
+        const racketCoords = JSON.parse(msg);
+        rackets[racketCoords.playerId] = racketCoords;
+        // console.log(rackets);
+        socket.broadcast.emit('racketCoords', msg);
+    });
+
+    socket.on('disconnect', function () {
+        const idx = players.findIndex(player => player.id === socket.id);
+        players.splice(idx, 1);
+        console.log('disconnect:', socket.id, idx, players);
+    })
+});
+
+var port = process.env.PORT || 3000;
+
+http.listen(port, function () {
+    console.log('listening on *:%d', port);
+});
+
+function registerPlayerAndStart(playerName, socket)
+{
+    const playerId = players.length;
+    init = {
+        'deg': playerId === 0 ? 0 : 180,
+        'racketLocation': playerId === 0 ? 'bottom' : 'top',
+        'player': {}
+    }
+    
+    player = {
+        'id': playerId,
+        'name': playerName,
+        'socketId': socket.id
+    }
+
+    init.player = player;
+
+    players.push(player);
+    console.log(players);
+    socket.emit('register', JSON.stringify(init));
+
+    if (players.length === 2) {
             console.log('start game', players.length);
             io.sockets.emit('start', JSON.stringify(players));
             setTimeout(() => {
@@ -60,26 +94,7 @@ io.on('connection', function (socket) {
                 }, 10)
             }, 4000);
         }
-    });
-    socket.on('racketCoords', function (msg) {
-        const racketCoords = JSON.parse(msg);
-        rackets[racketCoords.playerId] = racketCoords;
-        console.log(rackets);
-        socket.broadcast.emit('racketCoords', msg);
-    });
-
-    socket.on('disconnect', function () {
-        const idx = players.findIndex(player => player.id === socket.id);
-        players.splice(idx, 1);
-        console.log('disconnect:', socket.id, idx, players);
-    })
-});
-
-var port = process.env.PORT || 3000;
-
-http.listen(port, function () {
-    console.log('listening on *:%d', port);
-});
+}
 
 function paintBall() {
     const collisionResult = checkBounds();
