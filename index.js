@@ -23,7 +23,7 @@ function clearState()
 
 io.on('connection', function (socket) {
     socket.on('register', function (playerName)
-    {
+    { 
         registerPlayerAndStart(playerName, socket);
     });
 
