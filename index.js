@@ -144,11 +144,11 @@ function checkBounds() {
     // check bottom hole
     // if reached, you lose
     if (oldBall.bottom > 400) {
-        oldBall.direction = getNewT2BDirection(oldBall.direction);
+        //oldBall.direction = getNewT2BDirection(oldBall.direction);
         console.log('...PLAYER 1 LOST GAME...');
         //console.log('Changed direction T2B');
         //clearInterval(interval);
-        //retval = 0;
+        retval = 0;
     }
 
     if (oldBall.bottom > rackets[0].top
