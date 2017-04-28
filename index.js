@@ -9,6 +9,9 @@ app.get('/', function (req, res) {
 app.get('/style.css', function (req, res) {
     res.sendFile(__dirname + '/style.css');
 });
+app.get('/ball.png', function (req, res) {
+    res.sendFile(__dirname + '/ball.png');
+});
 var players = [];
 var rackets = [];
 var oldBall = { left: 0, top: 0, direction: 160 };
@@ -153,7 +156,7 @@ function checkBounds() {
         && oldBall.left > rackets[0].left
         && oldBall.right < rackets[0].right) {
         oldBall.direction = getNewT2BDirection(oldBall.direction);
-        console.log('hit racket player 1');
+        // console.log('hit racket player 1');
     }
 
     if (oldBall.top < rackets[1].bottom
@@ -162,6 +165,7 @@ function checkBounds() {
         oldBall.direction = getNewT2BDirection(oldBall.direction);
         console.log('hit racket player 2');
     }
+    console.log(oldBall.left, rackets[1].left, oldBall.right, rackets[1].right);
 
     return retval;
  }

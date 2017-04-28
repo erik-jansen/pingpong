@@ -25,14 +25,15 @@ body {
     height: 10px;
     background-color: white;
     display: flex;
-    border:1px solid red;
+    border:none;
     position:absolute;
 }
 
 .ball {
     width:10px;
     height:10px;
-    background-color: red;
+    /*background-color: red;*/
+    background-image:url('ball.png');
 }
 
 .countdown {
@@ -57,7 +58,23 @@ body {
     transform: translateX(-50%); 
     background-color: #ffffff;
     z-index: 10;
+    box-shadow: 0 10px 6px -6px #777;
+    text-align:center;
 }
+
+.register .frmRegister
+{
+    margin-top:20px;
+}
+
 .finish {
     display:none;
+}
+
+.playerName
+{
+    padding-top:20px;
+    height:40px;
+    font-size:30px;
+    text-align:center;
 }

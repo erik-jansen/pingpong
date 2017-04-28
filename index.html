@@ -12,19 +12,12 @@
             <button class="btnRegister">Register</button>
         </form>
     </div>
+    <div class="playerName" id="other"></div>
     <div class="game">
         <!--<div class="racket"></div>-->
         <div class="ball"></div>
     </div>
-
-    <!--<button onclick="startGame()">Start!</button>
-    <button onclick="pauzeGame()">Pauze</button>-->
-    <br /><br />
-    <div class="players">
-        <ul class="playerList"></ul>
-    </div>
-    
-    <div class="finished"></div>
+    <div class="playerName" id="you"></div>
 
     <script src="socket.io/socket.io.js"></script>
     <script>
@@ -37,9 +30,8 @@
         const frmRegister = document.querySelector('.frmRegister');
         const registerPane = document.querySelector('.register');
         const registerPaneContent = document.querySelector('.register .content');
-        const countdownPane = document.querySelector('.countdown');
-        const finishedPane = document.querySelector('.finished');
-        const playerList = document.querySelector('.playerList');
+        const playerNameYou = document.querySelector('#you.playerName');
+        const playerNameOther = document.querySelector('#other.playerName');
 
         let countdownInterval;
         
@@ -59,11 +51,9 @@
         socket.on('start', function (msg) {
             const players = JSON.parse(msg);
 
-            players.map(player => {
-                const li = document.createElement('li');
-                li.textContent = `Player ${player.id + 1}. ${player.name}`;
-                playerList.appendChild(li);
-            });
+            playerNameYou.textContent = player.name;
+            playerNameOther.textContent = findOtherPlayer(players, player.id);
+
             console.log('start');
 
             let countdownnumber = 3;
@@ -110,7 +100,6 @@
 
             registerPaneContent.innerHTML = `${finishMsg}<br/><br/><button onclick="playAgain()">Play Again</button>`;
             registerPane.style.display = 'block';
-            playerList.innerHTML = '';
             game.removeChild(rackets[0]);
             game.removeChild(rackets[1]);
             rackets = [];
@@ -181,13 +170,15 @@
 
             const coords = {
                 left: left,
-                right: left + 100,
+                right: 0, //just an init, gets set later on
                 top: top,
-                bottom: top + 10
+                bottom: top + racket.offsetHeight
             };
 
             if (coords.left < 0) coords.left = 0;
             if (coords.left > (gameCoords.width - racket.offsetWidth)) coords.left = gameCoords.width - racket.offsetWidth;
+            coords.right = coords.left + racket.offsetWidth;
+
             racket.style.transform = `translate(${coords.left}px, ${coords.top}px)`;
 
             emitToSocket('racketCoords', { playerId: player.id, left: coords.left, right: coords.right, top: coords.top, bottom: coords.bottom});
